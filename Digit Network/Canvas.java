@@ -1,21 +1,7 @@
-import java.awt.Color;
-import java.awt.BasicStroke;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import javax.swing.JComponent;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
 
 public class Canvas {
     JButton clearBtn;
@@ -31,23 +17,16 @@ public class Canvas {
     };
 
     public static void main(String[] args) {
-        nn.quickTrain();
+        nn.train();
         new Canvas().show();
     }
 
-    public void show() {
-        // create main frame
+    public void show() { // create main frame
         JFrame frame = new JFrame("Swing Paint");
         Container content = frame.getContentPane();
-        // set layout on content pane
-        content.setLayout(new BorderLayout());
-        // create draw area
-        drawArea = new DrawArea();
-
-        // add to content pane
+        content.setLayout(new BorderLayout());// set layout on content pane
+        drawArea = new DrawArea(); // create draw area
         content.add(drawArea, BorderLayout.CENTER);
-
-        // create controls to apply colors and call clear feature
         JPanel controls = new JPanel();
 
         clearBtn = new JButton("Clear");
@@ -57,18 +36,13 @@ public class Canvas {
         textArea = new JTextArea(1, 10);
         controls.add(textArea); // add to panel
 
-        // add to content pane
         content.add(controls, BorderLayout.NORTH);
-
         frame.setSize(360, 360);
-        // can close frame
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // show the swing paint result
         frame.setVisible(true);
     }
 
     public class DrawArea extends JComponent {
-
         private BufferedImage image;
         private Graphics2D g2;
         private int currentX, currentY, oldX, oldY;
@@ -77,32 +51,35 @@ public class Canvas {
             setDoubleBuffered(false);
             addMouseListener(new MouseAdapter() {
                 public void mousePressed(MouseEvent e) {
-                    // save coord x,y when mouse is pressed
-                    oldX = e.getX();
+                    oldX = e.getX(); // save coord x,y when mouse is pressed
                     oldY = e.getY();
                 }
             });
 
             addMouseMotionListener(new MouseMotionAdapter() {
                 public void mouseDragged(MouseEvent e) {
-                    int strokeSize = 20;
-
+                    int strokeSize = 23;
                     currentX = e.getX();
                     currentY = e.getY();
 
                     if (g2 != null) { // draw line if g2 context not null
                         g2.setStroke(new BasicStroke(strokeSize));
                         g2.drawLine(oldX, oldY, currentX, currentY);
-                        // refresh draw area to repaint
-                        repaint();
-                        // store current coords x,y as olds x,y
-                        oldX = currentX;
+                        repaint(); // refresh draw area to repaint
+                        oldX = currentX; // store current coords x,y as olds x,y
                         oldY = currentY;
                     }
 
-                    
-                    nn.forward(drawArea.getPixelValues());
-                    textArea.setText(nn.getOutput() + "");
+                    nn.forward(drawArea.getPixelValues()); //forward pass, then find output
+                    int output = 0;
+                    float max = 0;
+                    for (int i = 0; i < nn.layers[nn.layers.length - 1].neurons.length; i++) {
+                        if (nn.layers[nn.layers.length - 1].neurons[i].value > max) {
+                            max = nn.layers[nn.layers.length - 1].neurons[i].value;
+                            output = i;
+                        }
+                    }
+                    textArea.setText(output + "");
                 }
             });
         }
@@ -114,12 +91,10 @@ public class Canvas {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 clear();
             }
-
             g.drawImage(image, 0, 0, null);
         }
 
-        // now we create exposed methods
-        public void clear() {
+        public void clear() { // now we create exposed methods
             g2.setPaint(Color.white);
             g2.fillRect(0, 0, getSize().width, getSize().height);
             g2.setPaint(Color.black);
@@ -140,10 +115,8 @@ public class Canvas {
             }
 
             int compressedSize = 28;
-            int inputSize = canvasSize;
             int[][] compressedArray = new int[compressedSize][compressedSize];
-
-            int blockSize = inputSize / compressedSize;
+            int blockSize = canvasSize / compressedSize;
 
             for (int i = 0; i < compressedSize; i++) {
                 for (int j = 0; j < compressedSize; j++) {
@@ -159,10 +132,7 @@ public class Canvas {
             }
 
             float[] floatPixels1D = new float[784];
-            for (int i = 0; i < 28; i++) {
-                for (int j = 0; j < 28; j++) floatPixels1D[i * 28 + j] = 1.0f - compressedArray[i][j] / 255.0f;
-            }
-            
+            for (int i = 0; i < 28; i++) for (int j = 0; j < 28; j++) floatPixels1D[i * 28 + j] = 1.0f - compressedArray[i][j] / 255.0f;
             return floatPixels1D;
         }
     }

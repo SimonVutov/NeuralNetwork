@@ -10,8 +10,6 @@ public class NeuralNet {
     static Layer[] layers;
     static TrainingData[] tDataSet;
 	public static Scanner s = new Scanner(System.in);
-	public static final String ANSI_RESET = "\u001B[0m";
-	public static final String ANSI_RED = "\u001B[31m";
 	public static boolean trained = false;
 
     public static void main(String[] args) {
@@ -41,27 +39,22 @@ public class NeuralNet {
 			System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
 		System.out.println();
 
-        train(1, 0.5f, 25000);
+        train(1, 0.5f, 40000);
 
         System.out.println("Output after training");
 		forward(tDataSet[check].data);
 		for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++) {
-			if (layers[amount_of_layers - 1].neurons[j].value > 0.5f) {
-				System.out.println(j + " " + ANSI_RED + layers[amount_of_layers - 1].neurons[j].value + ANSI_RESET + " ");
-			} else {
-				System.out.println(j + " " + layers[amount_of_layers - 1].neurons[j].value + " ");
-			}
-			
+			if (layers[amount_of_layers - 1].neurons[j].value > 0.5f)
+				System.out.println(j + " " + "\u001B[31m" + layers[amount_of_layers - 1].neurons[j].value + "\u001B[0m" + " ");
+			else System.out.println(j + " " + layers[amount_of_layers - 1].neurons[j].value + " ");
 		}
-		System.out.println();
 		for (int i = 0; i < 28; i++) {
-			for (int j = 0; j < 28; j++) {
-				System.out.print(tDataSet[check].data[i * 28 + j] == 0 ? "0" : "1");
-			}
+			for (int j = 0; j < 28; j++) System.out.print(tDataSet[check].data[i * 28 + j] == 0 ? "0" : "1");
 			System.out.println();
 		}
 		System.out.println( " expected output: " + Arrays.toString(tDataSet[check].expectedOutput));
 
+		System.out.println("Out of 1000: " + outOf1000());
     }
 
     public static void CreateTrainingData() {
@@ -89,8 +82,7 @@ public class NeuralNet {
     }
     
     public static void forward(float[] inputs) {
-    	// First bring the inputs into the input layer layers[0]
-    	layers[0] = new Layer(inputs);
+    	layers[0] = new Layer(inputs); // First bring the inputs into the input layer layers[0]
     	
         for(int i = 1; i < layers.length; i++) {
         	for(int j = 0; j < layers[i].neurons.length; j++) {
@@ -158,7 +150,7 @@ public class NeuralNet {
     	}
     }
 
-	public static void quickTrain () {
+	public static void train () {
 		Neuron.setRangeWeight(-1,1);
 
 		int amount_of_layers = 4;
@@ -175,18 +167,25 @@ public class NeuralNet {
 		}
         
     	CreateTrainingData();
-		train(4, 0.5f, 50000);
+		train(1, 0.5f, 40000);
 	}
 
-	public static int getOutput (){
-		int output = 0;
-		float max = 0;
-		for (int i = 0; i < layers[layers.length - 1].neurons.length; i++) {
-			if (layers[layers.length - 1].neurons[i].value > max) {
-				max = layers[layers.length - 1].neurons[i].value;
-				output = i;
+	public static int outOf1000 () {
+		int correct = 0;
+		for (int i = 44000; i < 45000; i++) {
+			forward(tDataSet[i].data);
+			int output = 0;
+			float max = 0;
+			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
+				if (layers[layers.length - 1].neurons[j].value > max) {
+					max = layers[layers.length - 1].neurons[j].value;
+					output = j;
+				}
+			}
+			if (tDataSet[i].expectedOutput[output] == 1) {
+				correct++;
 			}
 		}
-		return output;
+		return correct;
 	}
 }

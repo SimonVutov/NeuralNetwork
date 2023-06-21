@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -28,7 +27,9 @@ public class NeuralNet {
         System.out.println("Output before training");
         for(int i = 0; i < tDataSet.length; i++) {
             forward(tDataSet[i].data);
-            System.out.println(Arrays.toString(layers[amount_of_layers].neurons));
+            for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++)
+				System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
+			System.out.println();
         }
 
         train(40, 0.05f);
@@ -36,7 +37,9 @@ public class NeuralNet {
         System.out.println("Output after training");
         for(int i = 0; i < tDataSet.length; i++) {
             forward(tDataSet[i].data);
-            System.out.println(Arrays.toString(layers[amount_of_layers].neurons));
+            for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++)
+				System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
+			System.out.println();
         }
     }
 

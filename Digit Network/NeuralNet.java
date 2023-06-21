@@ -1,23 +1,34 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class NeuralNet {
     static Layer[] layers;
     static TrainingData[] tDataSet;
     public static void main(String[] args) {
         Neuron.setRangeWeight(-1,1);
-    	layers = new Layer[3];
-    	layers[0] = null; // Input Layer 0,2
-    	layers[1] = new Layer(2,6); // Hidden Layer 2,6
-    	layers[2] = new Layer(6,1); // Output Layer 6,1
+		int amount_of_layers = 4;
+		int[] amount_of_neurons = new int[amount_of_layers];
+		amount_of_neurons[0] = 784;
+		amount_of_neurons[1] = 16;
+		amount_of_neurons[2] = 12;
+		amount_of_neurons[3] = 10;
+
+		layers = new Layer[amount_of_layers];
+		layers[0] = null; // Input Layer
+		for (int i = 1; i < amount_of_layers; i++) {
+			layers[i] = new Layer(amount_of_neurons[i - 1], amount_of_neurons[i]);
+		}
         
     	CreateTrainingData();
     	
         System.out.println("Output before training");
         for(int i = 0; i < tDataSet.length; i++) {
             forward(tDataSet[i].data);
-            System.out.println(layers[2].neurons[0].value);
+            System.out.println(Arrays.toString(layers[amount_of_layers].neurons));
         }
 
         train(40, 0.05f);
@@ -25,18 +36,32 @@ public class NeuralNet {
         System.out.println("Output after training");
         for(int i = 0; i < tDataSet.length; i++) {
             forward(tDataSet[i].data);
-            System.out.println(layers[2].neurons[0].value);
+            System.out.println(Arrays.toString(layers[amount_of_layers].neurons));
         }
     }
 
     public static void CreateTrainingData() {
-        DataReader dataReader = new DataReader();
-        List<float[]> in = dataReader.images;
-        List<float[]> out = dataReader.labels;
+		List<float[]> images = new ArrayList<>();
+        List<float[]> labels = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("mnist_train.csv"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                float[] imagePixels = new float[784];
+                for (int i = 1; i < 784; i++) imagePixels[i - 1] = (float) (Integer.parseInt(values[i]) / 255.0f);
+                images.add(imagePixels);
 
-		tDataSet = new TrainingData[in.size()];
-		for(int i = 0; i < in.size(); i++)
-			tDataSet[i] = new TrainingData(in.get(i),out.get(i));
+                float[] label = new float[10];
+                label[values[0].charAt(0) - '0'] = 1.0f;
+                labels.add(label);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+		tDataSet = new TrainingData[images.size()];
+		for(int i = 0; i < images.size(); i++)
+			tDataSet[i] = new TrainingData(images.get(i),labels.get(i));
     }
     
     public static void forward(float[] inputs) {

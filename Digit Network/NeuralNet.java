@@ -27,12 +27,12 @@ public class NeuralNet {
         System.out.println("Output before training");
         for(int i = 0; i < tDataSet.length; i++) {
             forward(tDataSet[i].data);
-            for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++)
-				System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
-			System.out.println();
+            //for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++)
+			//	System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
+			//System.out.println();
         }
 
-        train(40, 0.05f);
+        train(2, 0.05f);
 
         System.out.println("Output after training");
         for(int i = 0; i < tDataSet.length; i++) {
@@ -85,9 +85,7 @@ public class NeuralNet {
     
     // Calculate the output layer weights, calculate the hidden layer weight then update all the weights
     public static void backward(float learning_rate,TrainingData tData) {
-    	
-    	int number_layers = layers.length;
-    	int out_index = number_layers-1;
+    	int out_index = layers.length-1;
     	
     	for(int i = 0; i < layers[out_index].neurons.length; i++) { // Update the output layers For each output
     		float output = layers[out_index].neurons[i].value; // and for each of their weights
@@ -112,10 +110,11 @@ public class NeuralNet {
     				float previous_output = layers[i-1].neurons[k].value;
     				float error = delta*previous_output;
     				layers[i].neurons[j].cache_weights[k] = layers[i].neurons[j].weights[k] - learning_rate*error;
-					layers[i].neurons[j].update_weight();
     			}
     		}
     	}
+
+    	for(int i = 0; i< layers.length;i++) for(int j = 0; j < layers[i].neurons.length;j++) layers[i].neurons[j].update_weight();
     }
 
     public static float sumGradient(int n_index,int l_index) { // This function sums up all the gradient connecting a given neuron in a given layer

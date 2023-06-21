@@ -88,10 +88,11 @@ public class NeuralNetwork {
     				float previous_output = layers[i-1].neurons[k].value;
     				float error = delta*previous_output;
     				layers[i].neurons[j].cache_weights[k] = layers[i].neurons[j].weights[k] - learning_rate*error;
-					layers[i].neurons[j].update_weight();
     			}
     		}
     	}
+
+		for(int i = 0; i< layers.length;i++) for(int j = 0; j < layers[i].neurons.length;j++) layers[i].neurons[j].update_weight();
     }
 
     public static float sumGradient(int n_index,int l_index) { // This function sums up all the gradient connecting a given neuron in a given layer

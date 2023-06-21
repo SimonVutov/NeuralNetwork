@@ -53,10 +53,10 @@ public class UI extends JFrame {
         for (int i = 0; i < 28; i++) {
             for (int j = 0; j < 28; j++) {
                 int pixelValue = randomImagePixels[i * 28 + j];
-                System.out.print(pixelValue + " ");
+                //System.out.print(pixelValue + " ");
                 randomImage.setRGB(j, i, new Color(pixelValue, pixelValue, pixelValue).getRGB());
             }
-            System.out.println();
+            //System.out.println();
         }
 
         SwingUtilities.invokeLater(() -> {

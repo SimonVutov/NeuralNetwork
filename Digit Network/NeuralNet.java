@@ -14,7 +14,7 @@ public class NeuralNet {
 
     public static void main(String[] args) {
 		//Neuron.setRangeBias(-1,1);
-        Neuron.setRangeWeight(-1,1);
+        Neuron.setRangeWeight(0,1);
 
 		int amount_of_layers = 4;
 		int[] amount_of_neurons = new int[amount_of_layers];
@@ -39,7 +39,7 @@ public class NeuralNet {
 			System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
 		System.out.println();
 
-        train(1, 0.5f, 40000);
+        train(1, 0.05f, 44000);
 
         System.out.println("Output after training");
 		forward(tDataSet[check].data);
@@ -54,7 +54,13 @@ public class NeuralNet {
 		}
 		System.out.println( " expected output: " + Arrays.toString(tDataSet[check].expectedOutput));
 
-		System.out.println("Out of 1000: " + outOf1000());
+		int c = 0;
+		while (c < 20) {
+			c++;
+			System.out.println(c + " accuracy: " + (outOf1000()/10.0f));
+			train(1, 0.05f, 44000);
+		}
+
     }
 
     public static void CreateTrainingData() {
@@ -150,24 +156,15 @@ public class NeuralNet {
     	}
     }
 
-	public static void train () {
+	public static void initialize (int[] amount_of_neurons) {
 		Neuron.setRangeWeight(-1,1);
-
-		int amount_of_layers = 4;
-		int[] amount_of_neurons = new int[amount_of_layers];
-		amount_of_neurons[0] = 784;
-		amount_of_neurons[1] = 16;
-		amount_of_neurons[2] = 12;
-		amount_of_neurons[3] = 10;
-
-		layers = new Layer[amount_of_layers];
+		layers = new Layer[amount_of_neurons.length];
 		layers[0] = null; // Input Layer
-		for (int i = 1; i < amount_of_layers; i++) {
+		for (int i = 1; i < amount_of_neurons.length; i++) {
 			layers[i] = new Layer(amount_of_neurons[i - 1], amount_of_neurons[i]);
 		}
         
     	CreateTrainingData();
-		train(1, 0.5f, 40000);
 	}
 
 	public static int outOf1000 () {

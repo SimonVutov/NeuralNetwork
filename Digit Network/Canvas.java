@@ -17,7 +17,16 @@ public class Canvas {
     };
 
     public static void main(String[] args) {
-        nn.train();
+        new Canvas().show();
+        Neuron.setRangeWeight(0, 1);
+        int[] amount_of_neurons = new int[4];
+        amount_of_neurons[0] = 784;
+		amount_of_neurons[1] = 16;
+		amount_of_neurons[2] = 12;
+		amount_of_neurons[3] = 10;
+        nn.initialize(amount_of_neurons);
+        nn.train(1, 0.09f, 44000);
+
         new Canvas().show();
     }
 

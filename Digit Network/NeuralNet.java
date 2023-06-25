@@ -10,18 +10,18 @@ public class NeuralNet {
     static Layer[] layers;
     static TrainingData[] tDataSet;
 	public static Scanner s = new Scanner(System.in);
-	public static boolean trained = false;
 
     public static void main(String[] args) {
 		//Neuron.setRangeBias(-1,1);
-        Neuron.setRangeWeight(0,1);
+        Neuron.setRangeWeight(0.1f,0.5f);
 
-		int amount_of_layers = 4;
+		int amount_of_layers = 5;
 		int[] amount_of_neurons = new int[amount_of_layers];
 		amount_of_neurons[0] = 784;
-		amount_of_neurons[1] = 16;
-		amount_of_neurons[2] = 12;
-		amount_of_neurons[3] = 10;
+		amount_of_neurons[1] = 80;
+		amount_of_neurons[2] = 64;
+        amount_of_neurons[3] = 12;
+        amount_of_neurons[4] = 10;
 
 		layers = new Layer[amount_of_layers];
 		layers[0] = null; // Input Layer
@@ -39,7 +39,7 @@ public class NeuralNet {
 			System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
 		System.out.println();
 
-        train(1, 0.05f, 44000);
+        train(4000, 0.5f);
 
         System.out.println("Output after training");
 		forward(tDataSet[check].data);
@@ -55,12 +55,7 @@ public class NeuralNet {
 		System.out.println( " expected output: " + Arrays.toString(tDataSet[check].expectedOutput));
 
 		int c = 0;
-		while (c < 20) {
-			c++;
-			System.out.println(c + " accuracy: " + (outOf1000()/10.0f));
-			train(1, 0.05f, 44000);
-		}
-
+		while (c < 40) { c++; System.out.println(c + " accuracy: " + train(2000, 0.2f)); }
     }
 
     public static void CreateTrainingData() {
@@ -96,7 +91,7 @@ public class NeuralNet {
         		for(int k = 0; k < layers[i-1].neurons.length; k++) {
         			sum += layers[i-1].neurons[k].value * layers[i].neurons[j].weights[k];
         		}
-        		//sum += layers[i].neurons[j].bias; // TODO add in the bias 
+        		//sum += layers[i].neurons[j].bias;
         		layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
         	}
         } 	
@@ -146,14 +141,26 @@ public class NeuralNet {
     	return gradient_sum;
     }
 
-    public static void train(int training_iterations,float learning_rate, int batch_size) {
-    	trained = true;
+	public static int atImage = 0;
+
+    public static float train(int training_iterations,float learning_rate) {
+		int correct = 0;
 		for(int i = 0; i < training_iterations; i++) {
-    		for(int j = 0; j < batch_size; j++) {
-    			forward(tDataSet[j].data);
-    			backward(learning_rate,tDataSet[j]);
-    		}
+    		atImage++;
+			if (atImage >= 44000) atImage = 0;
+    		forward(tDataSet[atImage].data);
+			int output = 0;
+			float max = 0;
+			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
+				if (layers[layers.length - 1].neurons[j].value > max) {
+					max = layers[layers.length - 1].neurons[j].value;
+					output = j;
+				}
+			}
+			if (tDataSet[atImage].expectedOutput[output] == 1) correct++;
+			backward(learning_rate,tDataSet[atImage]);
     	}
+		return (float)correct / (float)training_iterations;
     }
 
 	public static void initialize (int[] amount_of_neurons) {
@@ -165,24 +172,5 @@ public class NeuralNet {
 		}
         
     	CreateTrainingData();
-	}
-
-	public static int outOf1000 () {
-		int correct = 0;
-		for (int i = 44000; i < 45000; i++) {
-			forward(tDataSet[i].data);
-			int output = 0;
-			float max = 0;
-			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
-				if (layers[layers.length - 1].neurons[j].value > max) {
-					max = layers[layers.length - 1].neurons[j].value;
-					output = j;
-				}
-			}
-			if (tDataSet[i].expectedOutput[output] == 1) {
-				correct++;
-			}
-		}
-		return correct;
 	}
 }

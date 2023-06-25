@@ -17,15 +17,15 @@ public class Canvas {
     };
 
     public static void main(String[] args) {
-        new Canvas().show();
         Neuron.setRangeWeight(0, 1);
-        int[] amount_of_neurons = new int[4];
+        int[] amount_of_neurons = new int[5];
         amount_of_neurons[0] = 784;
-		amount_of_neurons[1] = 16;
-		amount_of_neurons[2] = 12;
-		amount_of_neurons[3] = 10;
+		amount_of_neurons[1] = 1600;
+		amount_of_neurons[2] = 120;
+        amount_of_neurons[3] = 64;
+        amount_of_neurons[4] = 10;
         nn.initialize(amount_of_neurons);
-        nn.train(1, 0.09f, 44000);
+        nn.train(30000, 0.1f);
 
         new Canvas().show();
     }
@@ -67,7 +67,7 @@ public class Canvas {
 
             addMouseMotionListener(new MouseMotionAdapter() {
                 public void mouseDragged(MouseEvent e) {
-                    int strokeSize = 23;
+                    int strokeSize = 33;
                     currentX = e.getX();
                     currentY = e.getY();
 
@@ -88,7 +88,7 @@ public class Canvas {
                             output = i;
                         }
                     }
-                    textArea.setText(output + "");
+                    textArea.setText(output + " " + (int)(max*100));
                 }
             });
         }

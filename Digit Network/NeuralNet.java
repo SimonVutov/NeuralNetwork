@@ -16,12 +16,7 @@ public class NeuralNet {
         Neuron.setRangeWeight(0.1f,0.5f);
 
 		int amount_of_layers = 5;
-		int[] amount_of_neurons = new int[amount_of_layers];
-		amount_of_neurons[0] = 784;
-		amount_of_neurons[1] = 80;
-		amount_of_neurons[2] = 64;
-        amount_of_neurons[3] = 12;
-        amount_of_neurons[4] = 10;
+		int[] amount_of_neurons = new int[] {784, 80, 64, 12, 10};
 
 		layers = new Layer[amount_of_layers];
 		layers[0] = null; // Input Layer
@@ -88,9 +83,8 @@ public class NeuralNet {
         for(int i = 1; i < layers.length; i++) {
         	for(int j = 0; j < layers[i].neurons.length; j++) {
         		float sum = 0;
-        		for(int k = 0; k < layers[i-1].neurons.length; k++) {
+        		for(int k = 0; k < layers[i-1].neurons.length; k++)
         			sum += layers[i-1].neurons[k].value * layers[i].neurons[j].weights[k];
-        		}
         		//sum += layers[i].neurons[j].bias;
         		layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
         	}
@@ -142,7 +136,6 @@ public class NeuralNet {
     }
 
 	public static int atImage = 0;
-
     public static float train(int training_iterations,float learning_rate) {
 		int correct = 0;
 		for(int i = 0; i < training_iterations; i++) {
@@ -167,10 +160,8 @@ public class NeuralNet {
 		Neuron.setRangeWeight(-1,1);
 		layers = new Layer[amount_of_neurons.length];
 		layers[0] = null; // Input Layer
-		for (int i = 1; i < amount_of_neurons.length; i++) {
+		for (int i = 1; i < amount_of_neurons.length; i++)
 			layers[i] = new Layer(amount_of_neurons[i - 1], amount_of_neurons[i]);
-		}
-        
     	CreateTrainingData();
 	}
 }

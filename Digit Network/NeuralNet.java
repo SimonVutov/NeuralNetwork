@@ -5,6 +5,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+
 
 public class NeuralNet {
     static Layer[] layers;
@@ -13,18 +17,9 @@ public class NeuralNet {
 
     public static void main(String[] args) {
 		//Neuron.setRangeBias(-1,1);
-        Neuron.setRangeWeight(0.1f,0.5f);
-
-		int amount_of_layers = 5;
-		int[] amount_of_neurons = new int[] {784, 80, 64, 12, 10};
-
-		layers = new Layer[amount_of_layers];
-		layers[0] = null; // Input Layer
-		for (int i = 1; i < amount_of_layers; i++) {
-			layers[i] = new Layer(amount_of_neurons[i - 1], amount_of_neurons[i]);
-		}
-        
-    	CreateTrainingData();
+		int[] amount_of_neurons = new int[] {784, 30, 10};
+        initialize(amount_of_neurons);
+		int amount_of_layers = amount_of_neurons.length;
 
 		int check = (int)(Math.random() * tDataSet.length);
 
@@ -50,7 +45,10 @@ public class NeuralNet {
 		System.out.println( " expected output: " + Arrays.toString(tDataSet[check].expectedOutput));
 
 		int c = 0;
-		while (c < 40) { c++; System.out.println(c + " accuracy: " + train(2000, 0.2f)); }
+		while (c < 40) {
+			c++;
+			System.out.println(c + " training: " + train(4000, 0.3f) + " validation: " + test(45000, 46000));
+		}
     }
 
     public static void CreateTrainingData() {
@@ -140,8 +138,23 @@ public class NeuralNet {
 		int correct = 0;
 		for(int i = 0; i < training_iterations; i++) {
     		atImage++;
-			if (atImage >= 44000) atImage = 0;
-    		forward(tDataSet[atImage].data);
+			if (atImage >= 45000) atImage = 0;
+
+			int pixelsMove = 3;
+			int degreeMove = 15;
+			//scale
+			//noise
+
+			//rotate image and move image
+			float[] baseImage = tDataSet[atImage].data;
+			float[][] finalIMG = new float[28][28];
+			for (int j = 0; j < 28; j++) for (int k = 0; k < 28; k++) finalIMG[j][k] = baseImage[j * 28 + k];
+			finalIMG = rotateArray(finalIMG, Math.random() * degreeMove * 2 - degreeMove);
+			finalIMG = moveImage(finalIMG, (int)(Math.random() * pixelsMove*2 - pixelsMove), (int)(Math.random() * pixelsMove*2 - pixelsMove));
+			float[] rotatedImage = new float[784];
+			for (int j = 0; j < 28; j++) for (int k = 0; k < 28; k++) rotatedImage[j * 28 + k] = finalIMG[j][k];
+
+    		forward(rotatedImage);
 			int output = 0;
 			float max = 0;
 			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
@@ -156,6 +169,23 @@ public class NeuralNet {
 		return (float)correct / (float)training_iterations;
     }
 
+	public static float test(int start, int end) {
+		int correct = 0;
+		for(int i = start; i < end; i++) {
+			forward(tDataSet[i].data);
+			int output = 0;
+			float max = 0;
+			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
+				if (layers[layers.length - 1].neurons[j].value > max) {
+					max = layers[layers.length - 1].neurons[j].value;
+					output = j;
+				}
+			}
+			if (tDataSet[i].expectedOutput[output] == 1) correct++;
+		}
+		return (float)correct / (float)(end - start);
+	}
+
 	public static void initialize (int[] amount_of_neurons) {
 		Neuron.setRangeWeight(-1,1);
 		layers = new Layer[amount_of_neurons.length];
@@ -164,4 +194,63 @@ public class NeuralNet {
 			layers[i] = new Layer(amount_of_neurons[i - 1], amount_of_neurons[i]);
     	CreateTrainingData();
 	}
+
+	public static float[][] rotateArray(float[][] inputArray, double angleDegrees) {
+        // Convert the input array to a BufferedImage
+        BufferedImage inputImage = new BufferedImage(inputArray.length, inputArray[0].length, BufferedImage.TYPE_INT_ARGB);
+        for (int x = 0; x < inputArray.length; x++) {
+            for (int y = 0; y < inputArray[0].length; y++) {
+                int rgb = Float.floatToIntBits(inputArray[x][y]);
+                inputImage.setRGB(x, y, rgb);
+            }
+        }
+
+        // Create an AffineTransform object for rotation
+        AffineTransform transform = AffineTransform.getRotateInstance(Math.toRadians(angleDegrees),
+                inputImage.getWidth() / 2.0, inputImage.getHeight() / 2.0);
+
+        // Create a new BufferedImage for the rotated image
+        BufferedImage outputImage = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        // Apply the rotation transformation
+        AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+        op.filter(inputImage, outputImage);
+
+        // Convert the rotated image back to a float array
+        float[][] outputArray = new float[outputImage.getWidth()][outputImage.getHeight()];
+        for (int x = 0; x < outputImage.getWidth(); x++) {
+            for (int y = 0; y < outputImage.getHeight(); y++) {
+                int rgb = outputImage.getRGB(x, y);
+                outputArray[x][y] = Float.intBitsToFloat(rgb);
+            }
+        }
+
+        return outputArray;
+    }
+
+	public static float[][] moveImage(float[][] inputArray, int deltaX, int deltaY) {
+        int width = inputArray.length;
+        int height = inputArray[0].length;
+
+        // Create a new output array with the same dimensions as the input array
+        float[][] outputArray = new float[width][height];
+
+        // Iterate over each pixel in the input array
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                // Calculate the new coordinates for the current pixel
+                int newX = x + deltaX;
+                int newY = y + deltaY;
+
+                // Check if the new coordinates are within the bounds of the output array
+                if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+                    // Copy the pixel value from the input array to the corresponding position in the output array
+                    outputArray[newX][newY] = inputArray[x][y];
+                }
+            }
+        }
+
+        return outputArray;
+    }
+
 }

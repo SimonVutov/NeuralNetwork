@@ -15,8 +15,9 @@ public class NeuralNet {
     static TrainingData[] tDataSet;
 	public static Scanner s = new Scanner(System.in);
 
+	static float dropoutProbability = 0.2f; // Adjust the value as desired
+
     public static void main(String[] args) {
-		//Neuron.setRangeBias(-1,1);
 		int[] amount_of_neurons = new int[] {784, 30, 10};
         initialize(amount_of_neurons);
 		int amount_of_layers = amount_of_neurons.length;
@@ -24,15 +25,15 @@ public class NeuralNet {
 		int check = (int)(Math.random() * tDataSet.length);
 
         System.out.println("Output before training");
-		forward(tDataSet[check].data);
+		forward(tDataSet[check].data, false);
 		for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++)
 			System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
 		System.out.println();
 
-        train(4000, 0.5f);
+        train(4000, 0.2f);
 
         System.out.println("Output after training");
-		forward(tDataSet[check].data);
+		forward(tDataSet[check].data, false);
 		for (int j = 0; j < layers[amount_of_layers - 1].neurons.length; j++) {
 			if (layers[amount_of_layers - 1].neurons[j].value > 0.5f)
 				System.out.println(j + " " + "\u001B[31m" + layers[amount_of_layers - 1].neurons[j].value + "\u001B[0m" + " ");
@@ -47,7 +48,7 @@ public class NeuralNet {
 		int c = 0;
 		while (c < 40) {
 			c++;
-			System.out.println(c + " training: " + train(4000, 0.3f) + " validation: " + test(45000, 46000));
+			System.out.println(c + " training: " + train(8000, 0.1f) + " validation: " + test(45000, 46000));
 		}
     }
 
@@ -75,7 +76,7 @@ public class NeuralNet {
 			tDataSet[i] = new TrainingData(images.get(i),labels.get(i));
     }
     
-    public static void forward(float[] inputs) {
+    public static void forward(float[] inputs, boolean dropout) {
     	layers[0] = new Layer(inputs); // First bring the inputs into the input layer layers[0]
     	
         for(int i = 1; i < layers.length; i++) {
@@ -83,8 +84,20 @@ public class NeuralNet {
         		float sum = 0;
         		for(int k = 0; k < layers[i-1].neurons.length; k++)
         			sum += layers[i-1].neurons[k].value * layers[i].neurons[j].weights[k];
-        		//sum += layers[i].neurons[j].bias;
-        		layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
+        		sum += layers[i].neurons[j].bias;
+				
+				if (!dropout) sum *= 1.0f - dropoutProbability;
+			
+				// Apply dropout
+				if (i < layers.length - 1 && dropout) {
+					if (Math.random() < dropoutProbability) {
+						layers[i].neurons[j].value = 0.0f; // Dropout neuron
+					} else {
+						layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
+					}
+				} else {
+					layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
+				}
         	}
         } 	
     }
@@ -97,7 +110,7 @@ public class NeuralNet {
     		float output = layers[out_index].neurons[i].value; // and for each of their weights
     		float target = tData.expectedOutput[i];
     		float derivative = output-target;
-    		float delta = derivative*(output*(1-output));
+    		float delta = derivative*(output*(1-output)); //rate at which the loss function changes with respect to the weighted sum of inputs to each neuron
     		layers[out_index].neurons[i].gradient = delta;
     		for(int j = 0; j < layers[out_index].neurons[i].weights.length;j++) { 
     			float previous_output = layers[out_index-1].neurons[j].value;
@@ -110,13 +123,14 @@ public class NeuralNet {
     		for(int j = 0; j < layers[i].neurons.length; j++) { // For all neurons in that layers
     			float output = layers[i].neurons[j].value;
     			float gradient_sum = sumGradient(j,i+1);
-    			float delta = (gradient_sum)*(output*(1-output));
+    			float delta = (gradient_sum)*(output*(1-output)); //rate at which the loss function changes with respect to the weighted sum of inputs to each neuron
     			layers[i].neurons[j].gradient = delta;
     			for(int k = 0; k < layers[i].neurons[j].weights.length; k++) { // And for all their weights
     				float previous_output = layers[i-1].neurons[k].value;
     				float error = delta*previous_output;
     				layers[i].neurons[j].cache_weights[k] = layers[i].neurons[j].weights[k] - learning_rate*error;
     			}
+				layers[i].neurons[j].bias += learning_rate * delta; // Bias update
     		}
     	}
 
@@ -140,8 +154,8 @@ public class NeuralNet {
     		atImage++;
 			if (atImage >= 45000) atImage = 0;
 
-			int pixelsMove = 3;
-			int degreeMove = 15;
+			int pixelsMove = 2;
+			int degreeMove = 7;
 			//scale
 			//noise
 
@@ -154,7 +168,7 @@ public class NeuralNet {
 			float[] rotatedImage = new float[784];
 			for (int j = 0; j < 28; j++) for (int k = 0; k < 28; k++) rotatedImage[j * 28 + k] = finalIMG[j][k];
 
-    		forward(rotatedImage);
+    		forward(rotatedImage, true);
 			int output = 0;
 			float max = 0;
 			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
@@ -172,7 +186,7 @@ public class NeuralNet {
 	public static float test(int start, int end) {
 		int correct = 0;
 		for(int i = start; i < end; i++) {
-			forward(tDataSet[i].data);
+			forward(tDataSet[i].data, false);
 			int output = 0;
 			float max = 0;
 			for (int j = 0; j < layers[layers.length - 1].neurons.length; j++) {
@@ -187,7 +201,7 @@ public class NeuralNet {
 	}
 
 	public static void initialize (int[] amount_of_neurons) {
-		Neuron.setRangeWeight(-1,1);
+		Neuron.setRangeWeight(-0.01f,0.01f);
 		layers = new Layer[amount_of_neurons.length];
 		layers[0] = null; // Input Layer
 		for (int i = 1; i < amount_of_neurons.length; i++)

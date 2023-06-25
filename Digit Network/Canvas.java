@@ -74,7 +74,7 @@ public class Canvas {
                         oldY = currentY;
                     }
 
-                    nn.forward(drawArea.getPixelValues()); //forward pass, then find output
+                    nn.forward(drawArea.getPixelValues(), false); //forward pass, then find output
                     int output = 0;
                     float max = 0;
                     for (int i = 0; i < nn.layers[nn.layers.length - 1].neurons.length; i++) {

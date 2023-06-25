@@ -16,6 +16,7 @@ public class Neuron {
         this.bias = bias;
         this.cache_weights = this.weights;
         this.gradient = 0;
+        this.bias = bias;
     }
     
     // Constructor for the input neurons
@@ -25,6 +26,7 @@ public class Neuron {
         this.cache_weights = this.weights;
         this.gradient = -1;
         this.value = value;
+        this.bias = (float)Math.random() - 0.5f;
     }
     
     // Static function to set min and max weight for all variables

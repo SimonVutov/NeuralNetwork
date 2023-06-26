@@ -18,9 +18,8 @@ public class Canvas {
 
     public static void main(String[] args) {
         Neuron.setRangeWeight(0, 1);
-        int[] amount_of_neurons = new int[] {784, 30, 10};
-        nn.initialize(amount_of_neurons);
-        nn.train(40000, 0.3f);
+        nn.initialize(new int[] {784, 30, 10});
+        System.out.println(nn.train(80000, 0.1f));
 
         new Canvas().show();
     }
@@ -74,7 +73,7 @@ public class Canvas {
                         oldY = currentY;
                     }
 
-                    nn.forward(drawArea.getPixelValues(), false); //forward pass, then find output
+                    nn.forward(drawArea.getPixelValues(), false, new float[1][1]); //forward pass, then find output
                     int output = 0;
                     float max = 0;
                     for (int i = 0; i < nn.layers[nn.layers.length - 1].neurons.length; i++) {

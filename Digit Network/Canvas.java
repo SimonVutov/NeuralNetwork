@@ -19,7 +19,7 @@ public class Canvas {
     public static void main(String[] args) {
         Neuron.setRangeWeight(0, 1);
         nn.initialize(new int[] {784, 30, 10});
-        System.out.println(nn.train(80000, 0.1f));
+        System.out.println(nn.train(8000, 0.1f));
 
         new Canvas().show();
     }

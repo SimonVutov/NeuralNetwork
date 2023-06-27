@@ -21,7 +21,7 @@ public class StatUtil {
 
     // ReLU function
     public static float ReLU(float x) {
-        return (float) Math.max(0,x);
+        return ((float) Math.max(0,x));
     }
 
     // Derivative of the ReLU function

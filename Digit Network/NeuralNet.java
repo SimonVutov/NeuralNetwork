@@ -15,7 +15,7 @@ public class NeuralNet {
     static TrainingData[] tDataSet;
 	public static Scanner s = new Scanner(System.in);
 
-	static float dropoutProbability = 0.2f;
+	static float dropoutProbability = 0.0f;
 
     public static void main(String[] args) {
 		int[] amount_of_neurons = new int[] {784, 30, 10};
@@ -30,7 +30,7 @@ public class NeuralNet {
 			System.out.print(layers[amount_of_layers - 1].neurons[j].value + " ");
 		System.out.println();
 
-        train(45000, 0.5f);
+        train(5000, 0.5f);
 
         System.out.println("Output after training");
 		forward(tDataSet[check].data, false, new float[layers.length - 2][]);
@@ -45,23 +45,20 @@ public class NeuralNet {
 		}
 		System.out.println( " expected output: " + Arrays.toString(tDataSet[check].expectedOutput));
 
-		int c = 0;
-		while (c < 100) {
-			c++;
-			System.out.println(test(45000, 45100) + " " + test(0, 100) + " " + train(45000, 0.1f));
-		}
+		float learningRate = 0.5f;
+		float initialLearningRate = learningRate;
+		float testAcc = 1;
+		float oldTestAcc = 0;
 
-		//print every weight
-		/*for (int i = 1; i < layers.length - 1; i++) {
-			System.out.println("Layer " + i);
-			for (int j = 0; j < layers[i].neurons.length; j++) {
-				System.out.println("Neuron " + j);
-				for (int k = 0; k < layers[i].neurons[j].weights.length; k++) {
-					System.out.print(layers[i].neurons[j].weights[k] + " ");
-				}
-				System.out.println();
+		while (learningRate > initialLearningRate / 1024.0f) {
+			testAcc = test(45000, 46000);
+			if (testAcc < oldTestAcc) {
+				learningRate *= 0.5f;
+				System.out.println("Learning rate decreased to " + learningRate);
 			}
-		}*/
+			oldTestAcc = testAcc;
+			System.out.println(testAcc + " " + test(0, 100) + " " + train(15000, learningRate));
+		}
     }
 
     public static void CreateTrainingData() {
@@ -101,9 +98,9 @@ public class NeuralNet {
 				if (!dropout) sum *= 1.0f - dropoutProbability;
 				
 				if (dropout) {
-					if (i > 1) layers[i].neurons[j].value = StatUtil.ReLU(sum) * dropoutWeights[i - 2][j]; 
-					else layers[i].neurons[j].value = StatUtil.ReLU(sum);
-				} else layers[i].neurons[j].value = StatUtil.ReLU(sum);
+					if (i > 1) layers[i].neurons[j].value = StatUtil.Sigmoid(sum) * dropoutWeights[i - 2][j]; 
+					else layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
+				} else layers[i].neurons[j].value = StatUtil.Sigmoid(sum);
         	}
         } 	
     }
@@ -117,7 +114,8 @@ public class NeuralNet {
     		float target = tData.expectedOutput[i];
     		float derivative = output-target;
     		float delta = derivative*(output*(1-output)); //rate at which the loss function changes with respect to the weighted sum of inputs to each neuron
-    		layers[out_index].neurons[i].gradient = delta;
+    		//float delta = derivative * StatUtil.ReLUDerivative(output);
+			layers[out_index].neurons[i].gradient = delta;
     		for(int j = 0; j < layers[out_index].neurons[i].weights.length;j++) { 
     			float previous_output = layers[out_index-1].neurons[j].value;
     			float error = delta*previous_output;
@@ -130,7 +128,8 @@ public class NeuralNet {
     			float output = layers[i].neurons[j].value;
     			float gradient_sum = sumGradient(j,i+1);
     			float delta = (gradient_sum)*(output*(1-output)); //rate at which the loss function changes with respect to the weighted sum of inputs to each neuron
-    			layers[i].neurons[j].gradient = delta;
+				//float delta = gradient_sum * StatUtil.ReLUDerivative(output);
+				layers[i].neurons[j].gradient = delta;
     			for(int k = 0; k < layers[i].neurons[j].weights.length; k++) { // And for all their weights
     				float previous_output = layers[i-1].neurons[k].value;
     				float error = delta*previous_output;
@@ -171,8 +170,8 @@ public class NeuralNet {
 				}
 			}
 
-			int pixelsMove = 0;
-			int degreeMove = 45;
+			int pixelsMove = 2;
+			int degreeMove = 5;
 			//scale
 			//noise
 

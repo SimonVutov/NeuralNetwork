@@ -28,7 +28,7 @@ public class NextLetter {
         List<float[]> out = new ArrayList<float[]>();
         
         List<String> lines = new ArrayList<String>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("shakespeare.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("brown.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) lines.add(line);
         } catch (IOException e) { e.printStackTrace(); }
@@ -61,6 +61,12 @@ public class NextLetter {
         float[] inputArray = new float[26];
         inputArray[c - 'a'] = 1;
         System.out.println("Next letter: " + getLetter(forward(inputArray)));
+        //print for each letter
+        for (int i = 0; i < 26; i++) {
+            inputArray = new float[26];
+            inputArray[i] = 1;
+            System.out.println("Next letter for " + (char) (i + 'a') + ": " + getLetter(forward(inputArray)));
+        }
     }
 
     public static float sumGradient(int n_index, int l_index) {

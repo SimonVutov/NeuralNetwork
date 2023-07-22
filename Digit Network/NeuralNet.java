@@ -114,7 +114,6 @@ public class NeuralNet {
     		float target = tData.expectedOutput[i];
     		float derivative = output-target;
     		float delta = derivative*(output*(1-output)); //rate at which the loss function changes with respect to the weighted sum of inputs to each neuron
-    		//float delta = derivative * StatUtil.ReLUDerivative(output);
 			layers[out_index].neurons[i].gradient = delta;
     		for(int j = 0; j < layers[out_index].neurons[i].weights.length;j++) { 
     			float previous_output = layers[out_index-1].neurons[j].value;
@@ -128,7 +127,6 @@ public class NeuralNet {
     			float output = layers[i].neurons[j].value;
     			float gradient_sum = sumGradient(j,i+1);
     			float delta = (gradient_sum)*(output*(1-output)); //rate at which the loss function changes with respect to the weighted sum of inputs to each neuron
-				//float delta = gradient_sum * StatUtil.ReLUDerivative(output);
 				layers[i].neurons[j].gradient = delta;
     			for(int k = 0; k < layers[i].neurons[j].weights.length; k++) { // And for all their weights
     				float previous_output = layers[i-1].neurons[k].value;

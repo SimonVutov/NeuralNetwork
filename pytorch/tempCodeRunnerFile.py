@@ -1,1 +1,0 @@
-print(mnist_data[0][0])

@@ -1,30 +1,23 @@
 import torch as torch
-import csv
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 lr = 0.3
 mini_batch_size = 500
 iterations = 2000
 
-def read_csv_into_2d_list(file_name):
-    data_2d_list = []
-    with open(file_name, newline='') as f:
-        csvreader = csv.reader(f)
-        for row in csvreader:
-            data_2d_list.append(row)
-    return data_2d_list
-
-mnist_data = read_csv_into_2d_list("mnist_train.csv")
+mnist_data = pd.read_csv("mnist_train.csv").values.tolist()
 print("Read data, Number of images in the dataset: ", len(mnist_data))
 
-trainAmount = min(len(mnist_data), 10000)
+testAmount = 1000
+trainAmount = min(len(mnist_data) - testAmount, 10000)
 X = np.zeros((trainAmount, 784), dtype=np.float32)
 Y = np.zeros((trainAmount, 10), dtype=np.float32)
 X_test = np.zeros((1000, 784), dtype=np.float32)
 Y_test = np.zeros((1000, 10), dtype=np.float32)
 
-for i in range(0, trainAmount + 1000):
+for i in range(0, trainAmount + testAmount):
     if i < trainAmount:
         for j in range(0, 784):
             X[i][j] = float(mnist_data[i][j+1]) / 255.0
@@ -67,8 +60,7 @@ for i in range(iterations):
     log_probs = torch.log_softmax(forwardSecondLayer, dim=1)
     logloss = -torch.sum(log_probs * Y_train_mini_batch) / X_train_mini_batch.shape[0]
 
-    #backward
-    #calculate the gradients
+    #backward | calculate the gradients
     dlogloss = (forwardSecondLayer - Y_train_mini_batch) * softmax_deriv(forwardSecondLayer)
     dWeights2 = torch.matmul(forwardFirstLayer.T, dlogloss) / X_train_mini_batch.shape[0]
     dBias2 = torch.sum(dlogloss, 0) / X_train_mini_batch.shape[0]
@@ -89,15 +81,11 @@ for i in range(iterations):
 
 #test on 1000 test images
 correct = 0
-testImages = torch.from_numpy(X_test)
-anserImages = torch.from_numpy(Y_test)
 for n in range(0, 1000):
-    forwardFirstLayer = torch.matmul(testImages[n], Weights1) + Bias1
+    forwardFirstLayer = torch.matmul(torch.from_numpy(X_test)[n], Weights1) + Bias1
     forwardFirstLayer = relu(forwardFirstLayer)
     forwardSecondLayer = torch.matmul(forwardFirstLayer, Weights2) + Bias2
-    if torch.argmax(forwardSecondLayer) == torch.argmax(anserImages[n]):
-        correct += 1
-
+    if torch.argmax(forwardSecondLayer) == torch.argmax(torch.from_numpy(Y_test)[n]): correct += 1
 print("Test Accuracy:", (correct / 10))
 
 #plot the loss
